@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["resources/js/*"]
+        },
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "target": "ESNext",
+        "skipLibCheck": true,
+        "jsx": "react-jsx",
+        "types": [],
+        "typeRoots": []
+    },
+    "typeAcquisition": {
+        "enable": false,
+        "include": [],
+        "exclude": ["bootstrap", "less", "node-fetch", "react-dom", "react", "stylus", "yargs"]
+    },
+    "exclude": ["node_modules", "public", "dist-app"],
+    "include": ["resources/js/**/*"]
+}

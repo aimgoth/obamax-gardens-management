@@ -1,0 +1,89 @@
+{
+    "name": "obamax-gardens",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "main": "electron/main.js",
+    "author": "Obamax Gardens Ltd",
+    "description": "Obamax Gardens Management System",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "electron": "electron .",
+        "electron:dev": "concurrently \"npm run dev\" \"electron .\"",
+        "dist": "electron-builder --win --x64",
+        "dist:portable": "electron-builder --win portable --x64"
+    },
+    "build": {
+        "appId": "com.obamaxgardens.management",
+        "productName": "Obamax Gardens",
+        "copyright": "Copyright 2025 Obamax Gardens Ltd",
+        "directories": {
+            "output": "dist-app-v8"
+        },
+        "files": [
+            "electron/**/*",
+            "public/logo.jpg",
+            "public/logo.png",
+            "!node_modules/**/*",
+            "!resources/**/*",
+            "!public/build/**/*"
+        ],
+        "extraResources": [],
+        "win": {
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                },
+                {
+                    "target": "portable",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ],
+            "icon": "public/logo.png",
+            "requestedExecutionLevel": "asInvoker"
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "allowElevation": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "Obamax Gardens",
+            "deleteAppDataOnUninstall": false,
+            "differentialPackage": false
+        }
+    },
+    "devDependencies": {
+        "@inertiajs/react": "^2.0",
+        "@tailwindcss/forms": "^0.5.7",
+        "@tailwindcss/typography": "^0.5.10",
+        "@types/bootstrap": "^5.2.10",
+        "@types/less": "^3.0.8",
+        "@types/node-fetch": "^2.6.13",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "@types/stylus": "^0.48.43",
+        "@types/yargs": "^17.0.35",
+        "@vitejs/plugin-react": "^4.3.4",
+        "autoprefixer": "^10.4.16",
+        "axios": "^1.7.4",
+        "concurrently": "^9.0.1",
+        "electron": "^34.0.0",
+        "electron-builder": "^25.1.8",
+        "laravel-vite-plugin": "^1.2.0",
+        "postcss": "^8.4.32",
+        "tailwindcss": "^3.4.0",
+        "vite": "^6.0.11"
+    },
+    "dependencies": {
+        "@anthropic-ai/sdk": "^0.78.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1"
+    }
+}
