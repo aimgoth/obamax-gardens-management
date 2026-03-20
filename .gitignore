@@ -21,3 +21,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+dist-app/**/*.exe
+dist-app-v*/**/*.exe
+public/downloads/*.zip
+dist-app/**/*.zip
+dist-app-v*/**/*.zip
