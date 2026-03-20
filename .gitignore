@@ -26,3 +26,5 @@ dist-app-v*/**/*.exe
 public/downloads/*.zip
 dist-app/**/*.zip
 dist-app-v*/**/*.zip
+
+dist-app*/
