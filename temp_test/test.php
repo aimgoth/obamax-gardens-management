@@ -1,1 +1,0 @@
-<?php \ = require_once __DIR__.'/../bootstrap/app.php'; \->make('Illuminate\Contracts\Console\Kernel')->bootstrap(); print_r(array_map(fn(\) => \->name, \Gemini\Laravel\Facades\Gemini::models()->list()->models));

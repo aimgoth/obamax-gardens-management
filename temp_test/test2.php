@@ -1,1 +1,0 @@
-<?php require 'vendor/autoload.php'; \ = require_once 'bootstrap/app.php'; \->make('Illuminate\Contracts\Console\Kernel')->bootstrap(); \ = array_map(function(\) { return \->name; }, \Gemini\Laravel\Facades\Gemini::models()->list()->models); print_r(\);
