@@ -28,3 +28,7 @@ dist-app/**/*.zip
 dist-app-v*/**/*.zip
 
 dist-app*/
+
+.env
+
+public/test.js
