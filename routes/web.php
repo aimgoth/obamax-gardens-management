@@ -120,6 +120,8 @@ Route::middleware([
 
         Route::get('closing', [BarClosingController::class, 'index'])->name('closing.index');
         Route::post('closing', [BarClosingController::class, 'store'])->name('closing.store');
+        Route::get('closing/report', [BarClosingController::class, 'report'])->name('closing.report');
+        Route::delete('closing/{closing}', [BarClosingController::class, 'destroy'])->name('closing.destroy');
     });
 
     // RESTAURANT SYSTEM
