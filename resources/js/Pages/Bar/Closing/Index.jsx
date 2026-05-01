@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 
 const BLOCKS = ['Block A', 'Block B', 'Block C'];
@@ -7,6 +7,15 @@ const fmt = (n) => `GHS ${parseFloat(n||0).toFixed(2)}`;
 
 export default function BarClosingIndex({ workers, closings, todaySummary, today }) {
     const [showForm, setShowForm] = useState(false);
+    const [showReport, setShowReport] = useState(false);
+    const [downloading, setDownloading] = useState(false);
+
+    // Report filters
+    const [rptDateFrom, setRptDateFrom] = useState(today);
+    const [rptDateTo, setRptDateTo]     = useState(today);
+    const [rptBlock, setRptBlock]       = useState('');
+    const [rptWorker, setRptWorker]     = useState('');
+
     const { data, setData, post, processing, errors, reset } = useForm({
         worker_id: workers[0]?.id||'', block: workers[0]?.block||'', closing_date: today,
         cash_collected: '', momo_collected: '', notes: '',
@@ -14,13 +23,95 @@ export default function BarClosingIndex({ workers, closings, todaySummary, today
     const total = parseFloat(data.cash_collected||0) + parseFloat(data.momo_collected||0);
     const submit = (e) => { e.preventDefault(); post(route('bar.closing.store'), { onSuccess: () => { setShowForm(false); reset(); setData('closing_date', today); }}); };
 
+    const del = (id) => {
+        if (confirm('Remove this closing record?')) router.delete(route('bar.closing.destroy', id));
+    };
+
+    const downloadReport = async () => {
+        if (!rptDateFrom || !rptDateTo) { alert('Please select a date range.'); return; }
+        setDownloading(true);
+        try {
+            let url = route('bar.closing.report')
+                + '?date_from=' + rptDateFrom
+                + '&date_to=' + rptDateTo;
+            if (rptBlock)  url += '&block='     + encodeURIComponent(rptBlock);
+            if (rptWorker) url += '&worker_id=' + rptWorker;
+
+            const res = await fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''),
+                },
+                credentials: 'include',
+            });
+            if (!res.ok) throw new Error('Failed to generate report');
+            const blob = await res.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = `closing-report-${rptDateFrom}-to-${rptDateTo}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        } catch (err) {
+            alert('Could not download report: ' + err.message);
+        } finally {
+            setDownloading(false);
+        }
+    };
+
     return (
         <AppLayout title="Bar Daily Closing">
             <Head title="Bar - Daily Closing" />
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-800">Bar Daily Closing</h2>
-                <button onClick={() => setShowForm(true)} className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Record Closing</button>
+                <div className="flex gap-2">
+                    <button onClick={() => setShowReport(r => !r)} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">📄 Report</button>
+                    <button onClick={() => setShowForm(true)} className="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium">+ Record Closing</button>
+                </div>
             </div>
+
+            {/* Report Panel */}
+            {showReport && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5">
+                    <p className="text-sm font-semibold text-blue-800 mb-1">📋 Bar Closing Report</p>
+                    <p className="text-xs text-blue-600 mb-3">Select a date range and optional filters to download a PDF of bar closing records.</p>
+                    <div className="flex flex-wrap items-end gap-4">
+                        <div>
+                            <label className="block text-xs font-medium text-blue-700 mb-1">From Date</label>
+                            <input type="date" value={rptDateFrom} onChange={e => setRptDateFrom(e.target.value)}
+                                className="px-3 py-2 border border-blue-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-blue-700 mb-1">To Date</label>
+                            <input type="date" value={rptDateTo} onChange={e => setRptDateTo(e.target.value)}
+                                className="px-3 py-2 border border-blue-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white" />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-blue-700 mb-1">Block (optional)</label>
+                            <select value={rptBlock} onChange={e => setRptBlock(e.target.value)}
+                                className="px-3 py-2 border border-blue-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                                <option value="">All Blocks</option>
+                                {BLOCKS.map(b => <option key={b} value={b}>{b}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-blue-700 mb-1">Bar Keeper (optional)</label>
+                            <select value={rptWorker} onChange={e => setRptWorker(e.target.value)}
+                                className="px-3 py-2 border border-blue-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                                <option value="">All Bar Keepers</option>
+                                {workers.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                            </select>
+                        </div>
+                        <button onClick={downloadReport} disabled={downloading}
+                            className="px-5 py-2 bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white rounded-lg text-sm font-semibold">
+                            {downloading ? 'Generating...' : '⬇ Download PDF'}
+                        </button>
+                        <button onClick={() => setShowReport(false)} className="ml-auto text-blue-400 hover:text-blue-600 text-xs self-start">✕ Close</button>
+                    </div>
+                </div>
+            )}
 
             {/* Today Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -41,7 +132,7 @@ export default function BarClosingIndex({ workers, closings, todaySummary, today
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
                 <table className="w-full text-sm">
-                    <thead className="bg-gray-50 border-b"><tr>{['Date','Worker','Block','Cash','MoMo','Total','Notes'].map(h=><th key={h} className="text-left px-4 py-3 font-medium text-gray-600">{h}</th>)}</tr></thead>
+                    <thead className="bg-gray-50 border-b"><tr>{['Date','Worker','Block','Cash','MoMo','Total','Notes',''].map(h=><th key={h} className="text-left px-4 py-3 font-medium text-gray-600">{h}</th>)}</tr></thead>
                     <tbody className="divide-y divide-gray-50">
                         {closings.map(c => (
                             <tr key={c.id} className="hover:bg-gray-50">
@@ -52,6 +143,9 @@ export default function BarClosingIndex({ workers, closings, todaySummary, today
                                 <td className="px-4 py-2 text-gray-700">{fmt(c.momo_collected)}</td>
                                 <td className="px-4 py-2 font-semibold text-green-700">{fmt(c.total_collected)}</td>
                                 <td className="px-4 py-2 text-gray-400 text-xs">{c.notes||'—'}</td>
+                                <td className="px-4 py-2 text-right">
+                                    <button onClick={() => del(c.id)} className="text-red-400 hover:text-red-600 text-xs">Remove</button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
